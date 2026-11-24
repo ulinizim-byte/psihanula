@@ -24,4 +24,41 @@ function wrapText(ctx,text,x,y,width,lineHeight){let line='';for(const word of t
 function cardCanvas(){const a=adventures[current],canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1350;const c=canvas.getContext('2d');c.fillStyle='#e6ff5b';c.fillRect(0,0,1080,1350);c.strokeStyle='#151515';c.lineWidth=8;c.strokeRect(33,33,1014,1284);c.fillStyle='#151515';c.font='bold 46px Arial';c.fillText('ПСИХАНУЛА.',85,140);c.fillRect(85,177,910,4);c.font='bold 25px Arial';c.fillText('СЕРТИФИКАТ ИМПУЛЬСИВНОГО РЕШЕНИЯ',85,250);c.font='bold 83px Arial';let y=345;for(const line of a.end.split(' ')){if(c.measureText(line).width>850){c.font='bold 68px Arial';break}}y=wrapText(c,a.end,85,y,895,100);c.font='bold 31px Arial';y=wrapText(c,a.detail,85,Math.max(570,y+55),865,54);c.fillRect(85,1020,910,4);c.font='bold 44px Arial';c.fillText(a.score,85,1120);c.font='24px Arial';c.fillText('Всё случилось только в твоём воображении.',85,1205);c.fillText('UX/UI by Julz · designerzim.studio',85,1260);return canvas}
 function saveCard(){const a=document.createElement('a');a.download='psihanula-'+current+'.png';a.href=cardCanvas().toDataURL('image/png');a.click()}
 async function shareResult(){const text=`${adventures[current].end} — ${adventures[current].score} 😂 ПСИХАНУЛА`;if(navigator.share){try{await navigator.share({title:'ПСИХАНУЛА',text,url:location.href});return}catch(e){if(e.name==='AbortError')return}}if(navigator.clipboard&&location.protocol.startsWith('http')){try{await navigator.clipboard.writeText(text+' '+location.href);alert('Текст для поста скопирован!');return}catch(e){}}saveCard()}
-</script></body></html>
+</script>
+<style>
+.ps-arrow{display:inline-block;width:1em;height:1em;flex:none;vertical-align:-.12em;stroke:currentColor;color:inherit}
+button .ps-arrow,a .ps-arrow{margin-left:.32em}
+.choose b .ps-arrow,.choice-card span .ps-arrow,.bigscore b .ps-arrow{margin-left:0}
+.choose b .ps-arrow{width:20px;height:20px}
+.choice-card span .ps-arrow{width:19px;height:19px}
+</style>
+<script>
+/* Use the supplied Arrow.svg rather than Unicode arrows, so mobile browsers
+   display consistent vector icons. The SVG inherits the text color. */
+(()=>{
+ const arrowMarkup = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M4.66667 4.66669H11.3333V11.3334" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/>
+<path d="M4.66667 11.3334L11.3333 4.66669" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/>
+</svg>`;
+ function icon(){const template=document.createElement('template');template.innerHTML=arrowMarkup;const svg=template.content.firstElementChild;svg.classList.add('ps-arrow');svg.setAttribute('aria-hidden','true');svg.setAttribute('focusable','false');return svg}
+ function decorate(root){
+   const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+   const nodes=[];
+   while(walker.nextNode())if(walker.currentNode.nodeValue.includes('↗'))nodes.push(walker.currentNode);
+   for(const n of nodes){
+     if(n.parentElement?.closest('svg,script,style'))continue;
+     const pieces=n.nodeValue.split('↗'),frag=document.createDocumentFragment();
+     for(let i=0;i<pieces.length;i++){
+       if(pieces[i])frag.appendChild(document.createTextNode(pieces[i]));
+       if(i<pieces.length-1)frag.appendChild(icon());
+     }
+     n.replaceWith(frag);
+   }
+ }
+ let busy=false;
+ const observer=new MutationObserver(()=>{if(busy)return;busy=true;decorate(document.body);busy=false});
+ decorate(document.body);
+ observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+})();
+</script>
+</body></html>
